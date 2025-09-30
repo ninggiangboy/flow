@@ -1,3 +1,4 @@
+```mermaid
 sequenceDiagram
     participant U as User
     participant FE as Frontend
@@ -50,3 +51,4 @@ sequenceDiagram
     else Token invalid/expired
         BE-->>FE: return 400 { "error": "Invalid or expired registration link" }
     end
+```
