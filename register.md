@@ -8,7 +8,7 @@ sequenceDiagram
     participant Cache as Cache/RateLimiter
 
     U->>FE: Enter email
-    FE->>BE: POST /register?step=1 { email }
+    FE->>BE: POST /register-step1 { email }
     BE->>DB: select count(*) from user where email = ?
     DB-->>BE: Email not found
 
@@ -42,7 +42,7 @@ sequenceDiagram
     end
     
     U->>FE: Enter password, name, ...
-    FE->>BE: POST /register?step=2 { registrationToken, password, name, ... }
+    FE->>BE: POST /register-step2 { registrationToken, password, name, ... }
     BE->>BE: verify registrationToken (valid, not expired, email matches, status=pending)
     alt Token valid
         BE->>DB: update user set password_hash=?, name=?, status='active' where email=?
