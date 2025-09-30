@@ -9,18 +9,27 @@ sequenceDiagram
 
     U->>FE: Enter email
     FE->>BE: POST /register-step1 { email }
-    BE->>DB: select count(*) from user where email = ?
-    DB-->>BE: Email not found
 
-    BE->>Cache: get send_count:{email}/{ip}
+    BE->>Cache: get otp_attempts:{email}/{ip}
     alt Exceeded limit
-        BE-->>FE: return 429 { "error": "Try again later" }
+        BE-->>FE: return 429 { "error": "Too many requests, try later" }
     else Within limit
-        BE->>BE: generate secret for email (TOTP secret)
-        BE->>DB: insert user(email=?, status='pending', email_verified=false, secret=?)
+        BE->>DB: select id, status, email_verified from user where email = ?
+        DB-->>BE: result
+
+        alt User not found
+            BE->>BE: generate new secret
+            BE->>DB: insert user(email=?, status='pending', email_verified=false, secret=?)
+        else User found and status=pending and email_verified=false
+            BE->>BE: generate new secret (optional, can reuse old)
+            BE->>DB: update user set secret=? where email=?
+        else User found and email_verified=true
+            BE-->>FE: return 400 { "error": "Email already registered" }
+        end
+
         BE->>MS: send template 'otp-email' with param { otp }
-        BE->>Cache: set send_count:{email}/{ip} value++ ttl=60s
-        BE-->>FE: return 200 { "message": "TOTP sent" }
+        BE->>Cache: incr otp_attempts:{email}/{ip} ttl=1h
+        BE-->>FE: return 200 { "message": "OTP sent" }
     end
 
     U->>FE: Enter TOTP (6 digits)
