@@ -4,7 +4,7 @@ sequenceDiagram
     participant FE as Frontend
     participant BE as Backend
     participant DB as Database
-    participant Cache as Cache/RateLimiter
+    participant Cache as Cache
 
     U->>FE: Nhập oldPassword + newPassword
     FE->>BE: POST /change-password { oldPassword, newPassword }
